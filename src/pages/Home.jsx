@@ -1,64 +1,73 @@
-import React from 'react'
+import { useState } from 'react'
 
-const Home = ({ onNavigate }) => {
-  const handleShowRegister = () => {
-    onNavigate('register')
-  }
+function Home({ onNavigate }) {
+  const [showLogin, setShowLogin] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
 
   const handleShowLogin = () => {
     onNavigate('login')
   }
 
+  const handleShowRegister = () => {
+    onNavigate('register')
+  }
+
   return (
-    <div className="bg-white">
-      {/* Header Section */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+    <div className="min-h-screen bg-white font-sans">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center py-4">
+            {/* Logo - Igual que Dashboard */}
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">🧳</span>
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </div>
-              <h1 className="text-xl font-bold text-gray-800">Voyaj</h1>
+              <h1 className="text-lg font-semibold text-primary">Voyaj</h1>
             </div>
+            
+            {/* Auth buttons */}
             <div className="flex items-center space-x-4">
               <button 
                 onClick={handleShowLogin}
-                className="text-gray-600 hover:text-primary transition-colors duration-200 font-medium px-4 py-2"
+                className="text-gray-700 hover:text-primary font-medium transition-colors duration-200"
               >
                 Iniciar sesión
               </button>
               <button 
                 onClick={handleShowRegister}
-                className="bg-primary text-white font-semibold px-6 py-2 rounded-full hover:bg-primary-hover transform hover:-translate-y-0.5 transition-all duration-200 shadow-md"
+                className="bg-primary text-white font-semibold py-2 px-6 rounded-full hover:bg-primary-hover hover:-translate-y-0.5 transition-all duration-300 shadow-md hover:shadow-lg"
               >
                 Registrarse
               </button>
             </div>
           </div>
         </div>
-      </header>
+      </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-sage-50 to-vanilla-100 py-12 md:py-20">
+      <section className="py-12 md:py-20 lg:py-28 bg-gradient-to-br from-vanilla-50 via-white to-sage-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center space-y-6 md:space-y-8">
-            <div className="space-y-4 md:space-y-6">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-gray-800 leading-tight max-w-5xl mx-auto px-2 md:px-0">
-                Planifica, Vive y{' '}
-                <span className="text-primary">Recuerda</span>
+          <div className="text-center space-y-8 md:space-y-12">
+            <div className="space-y-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight px-4 md:px-0">
+                Planifica, disfruta y recuerda
                 <br />
-                tus viajes perfectos
+                <span className="text-primary">cada aventura</span>
               </h1>
-              <p className="text-md sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4 md:px-0">
-                La única app que necesitas para planificar tu viaje, controlar gastos durante el mismo,
-                y conservar todos tus recuerdos organizados para siempre.
+              <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4 md:px-0">
+                La plataforma todo-en-uno para viajeros inteligentes.
+                Organiza itinerarios, controla gastos y guarda recuerdos únicos.
               </p>
             </div>
-            <div className="space-y-4">
+
+            <div className="flex flex-col items-center space-y-4">
               <button 
                 onClick={handleShowRegister}
-                className="bg-primary text-white font-semibold py-4 px-8 rounded-full hover:bg-primary-hover hover:-translate-y-1 transform transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto max-w-xs flex items-center justify-center space-x-2"
+                className="bg-primary text-white font-semibold py-4 px-8 rounded-full hover:bg-primary-hover hover:-translate-y-1 transform transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
               >
                 <span>Comenzar mi primer viaje</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,24 +128,20 @@ const Home = ({ onNavigate }) => {
                   color: "primary"
                 },
                 {
-                  icon: "🔄",
-                  title: "Modo offline",
-                  description: "Accede a tu información importante incluso sin conexión a internet durante el viaje.",
+                  icon: "🌐",
+                  title: "Funciona offline",
+                  description: "Accede a tus planes sin internet. Sincroniza automáticamente cuando tengas conexión.",
                   color: "primary"
                 }
               ].map((feature, index) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full">
-                  <div className="space-y-4 h-full flex flex-col">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center p-2">
+                <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 bg-sage-100 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">{feature.icon}</span>
                     </div>
-                    <div className="space-y-2 flex-1">
-                      <h3 className="text-sm md:text-md font-semibold text-gray-800 leading-tight">
-                        {feature.title}
-                      </h3>
-                      <p className="text-gray-600 leading-relaxed text-sm md:text-md">
-                        {feature.description}
-                      </p>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                      <p className="text-gray-600 leading-relaxed">{feature.description}</p>
                     </div>
                   </div>
                 </div>
@@ -146,43 +151,15 @@ const Home = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 md:py-16 bg-primary">
+      {/* Pricing Section */}
+      <section className="py-12 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {[
-              { number: '15K+', label: 'Viajeros activos' },
-              { number: '50+', label: 'Países cubiertos' },
-              { number: '98%', label: 'Satisfacción' },
-              { number: '24/7', label: 'Soporte' }
-            ].map((stat, index) => (
-              <div key={index} className="text-center space-y-2">
-                <h3 className="text-xl md:text-2xl font-bold text-white">
-                  {stat.number}
-                </h3>
-                <p className="text-sage-100 text-sm md:text-lg text-center px-2 md:px-0">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section - Solo Free y Pro */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="space-y-12 md:space-y-16">
-            {/* Header */}
-            <div className="text-center space-y-4 max-w-3xl mx-auto">
-              <div className="inline-flex items-center px-3 py-1 bg-primary bg-opacity-10 text-primary text-sm font-semibold rounded-full">
-                Precios transparentes
-              </div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 px-4 md:px-0">
+          <div className="space-y-10 md:space-y-16">
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
                 Elige el plan perfecto para tu estilo de viaje
               </h2>
-              <p className="text-md md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed px-4 md:px-0">
-                Comienza gratis y evoluciona según tus necesidades.
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Sin contratos, sin sorpresas. Cancela cuando quieras.
               </p>
             </div>
@@ -210,27 +187,28 @@ const Home = ({ onNavigate }) => {
                   </div>
 
                   {/* Button */}
-                  <button 
-                    onClick={handleShowRegister}
-                    className="w-full bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 hover:-translate-y-0.5 transition-all duration-200"
-                  >
-                    Comenzar Gratis
-                  </button>
+                  <div className="flex justify-center">
+                    <button 
+                      onClick={handleShowRegister}
+                      className="bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 hover:-translate-y-0.5 transition-all duration-200"
+                    >
+                      Comenzar Gratis
+                    </button>
+                  </div>
 
                   <hr className="border-gray-200" />
 
                   {/* Features */}
                   <div className="space-y-3">
                     <p className="text-sm font-semibold text-gray-700">
-                      ✅ Todo incluido:
+                      ✅ Incluye:
                     </p>
                     <ul className="space-y-2">
                       {[
                         "1 viaje activo",
                         "Planificación básica",
                         "Control de gastos",
-                        "100 fotos por viaje",
-                        "Diario personal",
+                        "Hasta 50 fotos",
                         "Soporte por email"
                       ].map((feature, idx) => (
                         <li key={idx} className="text-sm text-gray-600 flex items-center space-x-2">
@@ -241,65 +219,57 @@ const Home = ({ onNavigate }) => {
                         </li>
                       ))}
                     </ul>
-
-                    <div className="pt-4">
-                      <p className="text-sm font-semibold text-gray-500">
-                        ⚠️ Limitaciones:
-                      </p>
-                      <ul className="space-y-1 mt-2">
-                        {[
-                          "Sin viajes colaborativos",
-                          "Sin exportación premium",
-                          "Sin análisis avanzados"
-                        ].map((limitation, idx) => (
-                          <li key={idx} className="text-sm text-gray-500">
-                            • {limitation}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Plan Pro */}
-              <div className="bg-white relative transform scale-105 shadow-2xl border-2 border-primary rounded-xl overflow-hidden">
+              {/* Plan PRO */}
+              <div className="bg-primary relative shadow-xl border-2 border-primary rounded-xl overflow-hidden">
                 {/* Popular badge */}
-                <div className="absolute top-0 right-0 bg-primary text-white px-4 py-1 text-sm font-semibold">
-                  Más Popular
+                <div className="absolute top-0 right-0 bg-sage-600 text-white px-3 py-1 text-xs font-semibold">
+                  MÁS POPULAR
                 </div>
-                
+
                 <div className="p-6 space-y-6">
                   {/* Header */}
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
-                        <span className="text-xl">⭐</span>
+                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <span className="text-xl">🚀</span>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-800">Aventurero</h3>
-                        <p className="text-sm text-gray-600">Para viajeros frecuentes</p>
+                        <h3 className="text-xl font-bold text-white">Aventurero PRO</h3>
+                        <p className="text-sm text-sage-100">Para viajeros frecuentes</p>
                       </div>
                     </div>
                     <div className="flex items-baseline space-x-2">
-                      <span className="text-3xl font-bold text-gray-800">$9.99</span>
-                      <span className="text-gray-600">mes</span>
+                      <span className="text-3xl font-bold text-white">$24.99</span>
+                      <span className="text-sage-100">/ mes</span>
                     </div>
                   </div>
 
                   {/* Button */}
-                  <button 
-                    onClick={handleShowRegister}
-                    className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary-hover hover:-translate-y-0.5 transition-all duration-200 shadow-md"
-                  >
-                    Elegir Plan
-                  </button>
+                  <div className="flex justify-center">
+                    <button 
+                      onClick={handleShowRegister}
+                      className="bg-white text-primary font-semibold py-3 px-6 rounded-lg hover:bg-vanilla-100 hover:-translate-y-0.5 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2"
+                    >
+                      <span>Empezar ahora gratis</span>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <p className="text-sm text-sage-200 text-center px-4">
+                    No necesitas tarjeta de crédito • Configuración en 2 minutos
+                  </p>
 
-                  <hr className="border-gray-200" />
+                  <hr className="border-sage-400 border-opacity-30" />
 
                   {/* Features */}
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-white">
                       ✅ Todo incluido:
                     </p>
                     <ul className="space-y-2">
@@ -311,12 +281,11 @@ const Home = ({ onNavigate }) => {
                         "Diario colaborativo",
                         "Viajes en grupo (hasta 10 personas)",
                         "Análisis de patrones de gasto",
-                        "Exportación PDF/Excel",
-                        "Modo offline",
+                        "Exportación PDF",
                         "Soporte prioritario 24/7"
                       ].map((feature, idx) => (
-                        <li key={idx} className="text-sm text-gray-600 flex items-center space-x-2">
-                          <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <li key={idx} className="text-sm text-sage-100 flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           <span>{feature}</span>
@@ -389,61 +358,23 @@ const Home = ({ onNavigate }) => {
                   rating: 5
                 }
               ].map((testimonial, index) => (
-                <div key={index} className="bg-white rounded-xl p-4 md:p-6 h-full shadow-sm">
-                  <div className="space-y-4 h-full flex flex-col">
-                    <div className="flex space-x-1">
+                <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <div className="space-y-4">
+                    <div className="flex text-yellow-400">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <svg key={i} className="w-4 h-4 text-red-400 fill-current" viewBox="0 0 24 24">
-                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       ))}
                     </div>
-                    <p className="text-gray-700 italic leading-relaxed text-sm md:text-md flex-1">
-                      "{testimonial.text}"
-                    </p>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-gray-800 text-sm md:text-md">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-xs md:text-sm text-gray-500">
-                        {testimonial.location}
-                      </p>
+                    <p className="text-gray-600 italic">"{testimonial.text}"</p>
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{testimonial.name}</h4>
+                      <p className="text-sm text-gray-500">{testimonial.location}</p>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-primary to-primary-dark">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center space-y-6 md:space-y-8">
-            <div className="space-y-4 max-w-3xl mx-auto">
-              <h2 className="text-lg md:text-xl font-bold text-white px-4 md:px-0">
-                ¿Listo para tu próxima aventura?
-              </h2>
-              <p className="text-md md:text-lg text-sage-100 max-w-2xl mx-auto leading-relaxed px-4 md:px-0">
-                Únete a miles de viajeros que ya están creando recuerdos increíbles con Voyaj.
-                Tu primer viaje es completamente gratis.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <button 
-                onClick={handleShowRegister}
-                className="bg-white text-primary font-semibold py-4 px-8 rounded-full hover:bg-vanilla-100 hover:-translate-y-0.5 transition-all duration-300 shadow-lg w-full sm:w-auto max-w-xs flex items-center justify-center space-x-2"
-              >
-                <span>Empezar ahora gratis</span>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-              <p className="text-sm text-sage-200 text-center px-4">
-                No necesitas tarjeta de crédito • Configuración en 2 minutos
-              </p>
             </div>
           </div>
         </div>
@@ -455,7 +386,10 @@ const Home = ({ onNavigate }) => {
           <div className="text-center space-y-8">
             <div className="flex items-center justify-center space-x-2">
               <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">🧳</span>
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </div>
               <h3 className="text-lg font-semibold text-white">Voyaj</h3>
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { tripsService } from '../services/api/tripsService.js'
 import { subscriptionsService } from '../services/api/subscriptionsService.js'
-import CreateTripModal from '../components/CreateTripModal.jsx'
+import CreateTripModal from '../components/createTripModal.jsx'
 import Navbar from '../components/Navbar.jsx'
 import Sidebar from '../components/Sidebar.jsx'
 
@@ -338,32 +338,6 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 </svg>
                 <span>Crear Nuevo Viaje</span>
               </button>
-            </div>
-          )}
-
-          {/* Quick Actions - Solo si tiene viajes */}
-          {trips.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Acciones Rápidas</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { title: "Ver Fotos", icon: "📸", action: "photos", color: "bg-blue-500" },
-                  { title: "Estadísticas", icon: "📊", action: "stats", color: "bg-green-500" },
-                  { title: "Amigos", icon: "👥", action: "friends", color: "bg-purple-500" },
-                  { title: "Configuración", icon: "⚙️", action: "settings", color: "bg-gray-500" }
-                ].map((action, index) => (
-                  <button
-                    key={index}
-                    onClick={() => onNavigate(action.action)}
-                    className="p-4 border border-gray-200 rounded-xl hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-center space-y-2"
-                  >
-                    <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto text-white text-xl`}>
-                      {action.icon}
-                    </div>
-                    <p className="font-medium text-gray-800 text-sm">{action.title}</p>
-                  </button>
-                ))}
-              </div>
             </div>
           )}
         </div>

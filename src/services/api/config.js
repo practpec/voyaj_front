@@ -8,8 +8,8 @@ export const getAuthHeaders = () => {
       return {}
     }
     
-    // Verificar que el token no esté corrupto o con comillas extra
-    const cleanToken = token.replace(/^"|"$/g, '')
+    // Limpiar token de comillas extra y espacios
+    const cleanToken = token.replace(/^["']|["']$/g, '').trim()
     console.log('[API] Token found, length:', cleanToken.length)
     return { Authorization: `Bearer ${cleanToken}` }
   } catch (error) {
@@ -35,22 +35,23 @@ export const makeRequest = async (url, options = {}) => {
     const config = {
       method: options.method || 'GET',
       headers: {
-        'Content-Type': 'application/json',
         ...authHeaders,
         ...options.headers,
       },
       ...options,
     }
 
-    // Si es FormData, remover Content-Type para que el browser lo maneje
-    if (options.body instanceof FormData) {
-      delete config.headers['Content-Type']
+    // CRÍTICO: Solo agregar Content-Type si NO es FormData
+    if (!(options.body instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json'
     }
+    // Si es FormData, el browser maneja Content-Type automáticamente
 
     console.log('[API] Request config:', {
       url: `${API_BASE_URL}${url}`,
       method: config.method,
-      hasAuth: !!authHeaders.Authorization
+      hasAuth: !!authHeaders.Authorization,
+      isFormData: options.body instanceof FormData
     })
 
     const response = await fetch(`${API_BASE_URL}${url}`, config)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { authService } from '../services/api/authService.js'
 import { friendshipsService } from '../services/api/friendshipsService.js'
+import { debugToken, testEndpoint } from '../utils/debugToken.js'
 
 function Profile({ user, setUser }) {
   const [tab, setTab] = useState('personal')
@@ -9,9 +10,9 @@ function Profile({ user, setUser }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [message, setMessage] = useState('')
+  const [uploadLoading, setUploadLoading] = useState(false)
 
   useEffect(() => {
-    // Refrescar datos del usuario al cargar el perfil
     refreshUserProfile()
     
     if (tab === 'friends') {
@@ -24,8 +25,6 @@ function Profile({ user, setUser }) {
       const freshUserData = await authService.getProfile()
       console.log('[PROFILE] Fresh user data:', freshUserData)
       setUser(freshUserData)
-      
-      // También actualizar en localStorage
       localStorage.setItem('user', JSON.stringify(freshUserData))
     } catch (error) {
       console.error('[PROFILE] [ERROR] Failed to refresh profile:', error)
@@ -86,82 +85,48 @@ function Profile({ user, setUser }) {
   }
 
   const uploadPhoto = async (file) => {
+    if (!file) return
+    
+    setUploadLoading(true)
+    setMessage('')
+    
     try {
-      console.log('[PROFILE] Starting photo upload process...')
+      console.log('[PROFILE] Starting upload with corrected service...')
       
-      // Test: Hacer una request manual para debug
-      const token = localStorage.getItem('access_token')
-      const formData = new FormData()
-      formData.append('file', file)
+      // Usar el servicio corregido
+      const result = await authService.uploadProfilePhoto(file)
+      console.log('[PROFILE] Upload success:', result)
       
-      console.log('[PROFILE] Manual fetch attempt with:', {
-        url: 'http://localhost:8000/auth/upload-profile-photo',
-        hasToken: !!token,
-        tokenStart: token?.substring(0, 20),
-        fileSize: file.size
-      })
+      // Actualizar user con nueva foto
+      const updatedUser = { ...user, profile_photo_url: result.profile_photo_url }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
       
-      const response = await fetch('http://localhost:8000/auth/upload-profile-photo', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-      
-      console.log('[PROFILE] Manual fetch response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      })
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('[PROFILE] Manual fetch error response:', errorText)
-        throw new Error(`HTTP ${response.status}: ${errorText}`)
-      }
-      
-      const result = await response.json()
-      console.log('[PROFILE] Manual fetch success:', result)
-      
-      setUser({ ...user, profile_photo_url: result.profile_photo_url })
       setMessage('Foto actualizada correctamente')
       
     } catch (error) {
       console.error('[PROFILE] [ERROR] Upload failed:', error)
       setMessage(`Error al subir foto: ${error.toString()}`)
+    } finally {
+      setUploadLoading(false)
     }
   }
 
-  // Test endpoints
-  const testEndpoints = async () => {
-    const token = localStorage.getItem('access_token')
-    console.log('[PROFILE] Testing endpoints with token:', token?.substring(0, 20))
+  const runDebugTests = async () => {
+    console.log('\n=== DEBUG SESSION START ===')
     
-    const endpoints = [
-      '/auth/profile',
-      '/auth/upload-profile-photo'
-    ]
+    // 1. Debug token
+    debugToken()
     
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(`http://localhost:8000${endpoint}`, {
-          method: endpoint.includes('upload') ? 'POST' : 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            ...(endpoint.includes('upload') ? {} : { 'Content-Type': 'application/json' })
-          },
-          ...(endpoint.includes('upload') ? { body: new FormData() } : {})
-        })
-        
-        console.log(`[PROFILE] Test ${endpoint}:`, {
-          status: response.status,
-          statusText: response.statusText
-        })
-      } catch (error) {
-        console.error(`[PROFILE] Test ${endpoint} failed:`, error)
-      }
-    }
+    // 2. Test profile endpoint
+    await testEndpoint('/auth/profile')
+    
+    // 3. Test upload endpoint with empty FormData
+    const testFormData = new FormData()
+    testFormData.append('file', new Blob(['test'], { type: 'image/jpeg' }), 'test.jpg')
+    await testEndpoint('/auth/upload-profile-photo', 'POST', testFormData)
+    
+    console.log('=== DEBUG SESSION END ===\n')
   }
 
   return (
@@ -171,11 +136,14 @@ function Profile({ user, setUser }) {
       {/* Debug Controls */}
       <div style={{ backgroundColor: '#f0f0f0', padding: '15px', marginBottom: '20px' }}>
         <h3>🔧 Debug Controls</h3>
-        <button onClick={testEndpoints} style={{ marginRight: '10px', padding: '10px' }}>
-          Test Endpoints
+        <button onClick={runDebugTests} style={{ marginRight: '10px', padding: '10px' }}>
+          Run Debug Tests
         </button>
-        <button onClick={refreshUserProfile} style={{ padding: '10px' }}>
+        <button onClick={refreshUserProfile} style={{ marginRight: '10px', padding: '10px' }}>
           Refresh Profile
+        </button>
+        <button onClick={() => console.log('Current user:', user)} style={{ padding: '10px' }}>
+          Log User State
         </button>
       </div>
 
@@ -204,16 +172,6 @@ function Profile({ user, setUser }) {
         <div>
           <h2>Información Personal</h2>
           
-          {/* Debug Info */}
-          <div style={{ backgroundColor: '#f5f5f5', padding: '10px', marginBottom: '15px' }}>
-            <h3>Debug Info:</h3>
-            <p>User ID: {user.id}</p>
-            <p>Email: {user.email}</p>
-            <p>Email verificado (user object): {user.email_verified ? 'Sí' : 'No'}</p>
-            <p>Tiene foto: {user.profile_photo_url ? 'Sí' : 'No'}</p>
-            <p>Token presente: {localStorage.getItem('access_token') ? 'Sí' : 'No'}</p>
-          </div>
-
           <div style={{ marginBottom: '15px' }}>
             <p><strong>Nombre:</strong> {user.name}</p>
             <p><strong>Email:</strong> {user.email}</p>
@@ -238,14 +196,20 @@ function Profile({ user, setUser }) {
             <input 
               type="file" 
               accept="image/*"
+              disabled={uploadLoading}
               onChange={(e) => {
                 const file = e.target.files[0]
                 if (file) {
-                  console.log('[PROFILE] File selected:', file.name, file.size, 'bytes')
+                  console.log('[PROFILE] File selected:', {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                  })
                   uploadPhoto(file)
                 }
               }}
             />
+            {uploadLoading && <p>Subiendo foto...</p>}
           </div>
 
           {!user.email_verified && (

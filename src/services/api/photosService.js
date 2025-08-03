@@ -1,10 +1,10 @@
 import { makeRequest } from './config.js'
 
 export const photosService = {
+  // Solo el upload que funciona
   uploadPhoto: (tripId, formData) => 
-    makeRequest(`/trips/${tripId}/photos`, {
+    makeRequest(`/trips/${tripId}/photos/upload`, {
       method: 'POST',
-      headers: {},
       body: formData
     }),
 
@@ -16,12 +16,9 @@ export const photosService = {
       method: 'DELETE'
     }),
 
-  getPhotosByDay: (tripId, dayId) => 
-    makeRequest(`/trips/${tripId}/photos?day_id=${dayId}`),
+  getPhotosByDay: (tripId) => 
+    makeRequest(`/trips/${tripId}/photos/by-day`),
 
-  updatePhotoCaption: (tripId, photoId, caption) => 
-    makeRequest(`/trips/${tripId}/photos/${photoId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ caption })
-    })
+  getPhotoDetails: (tripId, photoId) => 
+    makeRequest(`/trips/${tripId}/photos/${photoId}`)
 }

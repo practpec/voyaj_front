@@ -58,9 +58,11 @@ export const authService = {
       tokenStart: token?.substring(0, 20)
     })
     
+    // CORRECCIÓN: No pasar headers vacíos, dejar que makeRequest maneje los headers
     return makeRequest('/auth/upload-profile-photo', {
       method: 'POST',
       body: formData
+      // NO especificar headers aquí, makeRequest los maneja correctamente
     })
   }
 }

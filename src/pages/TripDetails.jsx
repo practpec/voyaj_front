@@ -13,6 +13,7 @@ function TripDetails({ tripId, onNavigate }) {
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [uploadLoading, setUploadLoading] = useState(false)
 
   // Forms
   const [showExpenseForm, setShowExpenseForm] = useState(false)
@@ -130,14 +131,36 @@ function TripDetails({ tripId, onNavigate }) {
   }
 
   const uploadPhoto = async (file) => {
+    if (!file) return
+    
+    setUploadLoading(true)
+    setMessage('')
+    
     try {
+      console.log('[TRIP_DETAILS] Starting photo upload:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        tripId: tripId
+      })
+      
+      // Crear FormData con el archivo
       const formData = new FormData()
       formData.append('file', file)
-      await photosService.uploadPhoto(tripId, formData)
+      
+      // Usar el servicio corregido de fotos
+      const result = await photosService.uploadPhoto(tripId, formData)
+      console.log('[TRIP_DETAILS] Upload success:', result)
+      
+      // Recargar la lista de fotos
       loadPhotos()
-      setMessage('Foto subida')
+      setMessage('Foto subida correctamente')
+      
     } catch (error) {
-      setMessage(error.toString())
+      console.error('[TRIP_DETAILS] [ERROR] Upload failed:', error)
+      setMessage(`Error al subir foto: ${error.toString()}`)
+    } finally {
+      setUploadLoading(false)
     }
   }
 
@@ -147,6 +170,17 @@ function TripDetails({ tripId, onNavigate }) {
       await expensesService.deleteExpense(tripId, expenseId)
       loadExpenses()
       setMessage('Gasto eliminado')
+    } catch (error) {
+      setMessage(error.toString())
+    }
+  }
+
+  const deletePhoto = async (photoId) => {
+    if (!confirm('¿Eliminar foto?')) return
+    try {
+      await photosService.deletePhoto(tripId, photoId)
+      loadPhotos()
+      setMessage('Foto eliminada')
     } catch (error) {
       setMessage(error.toString())
     }
@@ -165,7 +199,14 @@ function TripDetails({ tripId, onNavigate }) {
         <p>Miembros: {trip.members.length}</p>
       </div>
 
-      {message && <div style={{ color: 'green', marginBottom: '15px' }}>{message}</div>}
+      {message && <div style={{ 
+        color: message.includes('Error') ? 'red' : 'green', 
+        marginBottom: '15px',
+        padding: '10px',
+        border: `1px solid ${message.includes('Error') ? 'red' : 'green'}`
+      }}>
+        {message}
+      </div>}
 
       {/* Tabs */}
       <div style={{ marginBottom: '20px' }}>
@@ -296,11 +337,26 @@ function TripDetails({ tripId, onNavigate }) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2>Fotos ({photos.length})</h2>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files[0] && uploadPhoto(e.target.files[0])}
-            />
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploadLoading}
+                onChange={(e) => {
+                  const file = e.target.files[0]
+                  if (file) {
+                    console.log('[TRIP_DETAILS] File selected:', {
+                      name: file.name,
+                      size: file.size,
+                      type: file.type
+                    })
+                    uploadPhoto(file)
+                  }
+                }}
+                style={{ marginRight: '10px' }}
+              />
+              {uploadLoading && <span>Subiendo...</span>}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
@@ -314,6 +370,19 @@ function TripDetails({ tripId, onNavigate }) {
                 <div style={{ padding: '10px' }}>
                   {photo.location && <p>📍 {photo.location}</p>}
                   {photo.taken_at && <p>{new Date(photo.taken_at).toLocaleDateString()}</p>}
+                  <button 
+                    onClick={() => deletePhoto(photo.id)}
+                    style={{ 
+                      backgroundColor: 'red', 
+                      color: 'white', 
+                      padding: '5px', 
+                      border: 'none',
+                      cursor: 'pointer',
+                      marginTop: '5px'
+                    }}
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
             ))}

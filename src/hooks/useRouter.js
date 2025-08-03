@@ -13,7 +13,8 @@ const ROUTES = {
   DASHBOARD: 'dashboard',
   PROFILE: 'profile',
   TRIP_DETAILS: 'trip-details',
-  SUBSCRIPTION: 'subscription'
+  TRIPS: 'trips',
+  FRIENDS: 'friends'
 }
 
 const PUBLIC_ROUTES = [

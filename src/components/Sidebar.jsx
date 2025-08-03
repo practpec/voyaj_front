@@ -18,7 +18,7 @@ const Sidebar = ({ currentRoute, onNavigate, isOpen = false, onClose }) => {
         </svg>
       ), 
       label: 'Mis Viajes', 
-      route: 'my-trips' 
+      route: 'trips' 
     },
     { 
       icon: (

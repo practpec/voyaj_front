@@ -3,10 +3,14 @@ import { tripsService } from '../services/api/tripsService.js'
 import { expensesService } from '../services/api/expensesService.js'
 import { photosService } from '../services/api/photosService.js'
 import { journalService } from '../services/api/journalService.js'
+import TripHeader from '../components/TripHeader'
+import AnalyticsCards from '../components/AnalyticsCards'
+import DayCard from '../components/DayCard'
+import PhotosGrid from '../components/PhotosGrid'
+import DayDetailModal from '../components/DayDetailModal'
 
 function TripDetails({ tripId, onNavigate }) {
   const [trip, setTrip] = useState(null)
-  const [activeTab, setActiveTab] = useState('schedule')
   const [expenses, setExpenses] = useState([])
   const [photos, setPhotos] = useState([])
   const [journalEntries, setJournalEntries] = useState([])
@@ -15,9 +19,11 @@ function TripDetails({ tripId, onNavigate }) {
   const [message, setMessage] = useState('')
   const [uploadLoading, setUploadLoading] = useState(false)
 
+  // Modal state
+  const [selectedDay, setSelectedDay] = useState(null)
+  const [showDayModal, setShowDayModal] = useState(false)
+
   // Forms
-  const [showExpenseForm, setShowExpenseForm] = useState(false)
-  const [showJournalForm, setShowJournalForm] = useState(false)
   const [expenseForm, setExpenseForm] = useState({
     amount: '',
     description: '',
@@ -37,11 +43,11 @@ function TripDetails({ tripId, onNavigate }) {
   }, [tripId])
 
   useEffect(() => {
-    if (activeTab === 'expenses') loadExpenses()
-    if (activeTab === 'photos') loadPhotos()
-    if (activeTab === 'journal') loadJournalEntries()
-    if (activeTab === 'analytics') loadAnalytics()
-  }, [activeTab])
+    loadAnalytics()
+    loadExpenses()
+    loadPhotos()
+    loadJournalEntries()
+  }, [tripId])
 
   const loadTripData = async () => {
     try {
@@ -51,7 +57,7 @@ function TripDetails({ tripId, onNavigate }) {
         setJournalForm(prev => ({ ...prev, day_id: tripData.days[0].id }))
       }
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     } finally {
       setLoading(false)
     }
@@ -62,7 +68,7 @@ function TripDetails({ tripId, onNavigate }) {
       const data = await expensesService.getTripExpenses(tripId)
       setExpenses(data)
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -71,7 +77,7 @@ function TripDetails({ tripId, onNavigate }) {
       const data = await photosService.getTripPhotos(tripId)
       setPhotos(data)
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -80,7 +86,7 @@ function TripDetails({ tripId, onNavigate }) {
       const data = await journalService.getTripEntries(tripId)
       setJournalEntries(data)
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -89,26 +95,32 @@ function TripDetails({ tripId, onNavigate }) {
       const data = await tripsService.getTripAnalytics(tripId)
       setAnalytics(data)
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
+  }
+
+  const handleDayClick = (day) => {
+    setSelectedDay(day)
+    setJournalForm(prev => ({ ...prev, day_id: day.id }))
+    setExpenseForm(prev => ({ ...prev, date: day.date }))
+    setShowDayModal(true)
   }
 
   const createExpense = async (e) => {
     e.preventDefault()
     try {
       await expensesService.createExpense(tripId, expenseForm)
-      setShowExpenseForm(false)
       setExpenseForm({
         amount: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        date: selectedDay?.date || new Date().toISOString().split('T')[0],
         currency: 'MXN',
         category: 'otros'
       })
       loadExpenses()
       setMessage('Gasto creado')
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -116,9 +128,8 @@ function TripDetails({ tripId, onNavigate }) {
     e.preventDefault()
     try {
       await journalService.createEntry(tripId, journalForm)
-      setShowJournalForm(false)
       setJournalForm({
-        day_id: trip.days[0]?.id || '',
+        day_id: selectedDay?.id || trip.days[0]?.id || '',
         content: '',
         emotions: {},
         recommendations: []
@@ -126,7 +137,7 @@ function TripDetails({ tripId, onNavigate }) {
       loadJournalEntries()
       setMessage('Entrada creada')
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -137,27 +148,14 @@ function TripDetails({ tripId, onNavigate }) {
     setMessage('')
     
     try {
-      console.log('[TRIP_DETAILS] Starting photo upload:', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        tripId: tripId
-      })
-      
-      // Crear FormData con el archivo
       const formData = new FormData()
       formData.append('file', file)
       
-      // Usar el servicio corregido de fotos
-      const result = await photosService.uploadPhoto(tripId, formData)
-      console.log('[TRIP_DETAILS] Upload success:', result)
-      
-      // Recargar la lista de fotos
+      await photosService.uploadPhoto(tripId, formData)
       loadPhotos()
       setMessage('Foto subida correctamente')
       
     } catch (error) {
-      console.error('[TRIP_DETAILS] [ERROR] Upload failed:', error)
       setMessage(`Error al subir foto: ${error.toString()}`)
     } finally {
       setUploadLoading(false)
@@ -171,7 +169,7 @@ function TripDetails({ tripId, onNavigate }) {
       loadExpenses()
       setMessage('Gasto eliminado')
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
@@ -182,310 +180,94 @@ function TripDetails({ tripId, onNavigate }) {
       loadPhotos()
       setMessage('Foto eliminada')
     } catch (error) {
-      setMessage(error.toString())
+      setMessage(`Error: ${error.toString()}`)
     }
   }
 
-  if (loading) return <div>Cargando...</div>
-  if (!trip) return <div>Viaje no encontrado</div>
+  // Filter data for selected day
+  const getDayExpenses = (dayId) => {
+    const day = trip?.days.find(d => d.id === dayId)
+    if (!day) return []
+    return expenses.filter(expense => expense.date === day.date)
+  }
+
+  const getDayJournalEntries = (dayId) => {
+    return journalEntries.filter(entry => entry.day_id === dayId)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!trip) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Viaje no encontrado</p>
+          <button 
+            onClick={() => onNavigate('dashboard')}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={() => onNavigate('dashboard')}>← Volver</button>
-        <h1>{trip.title}</h1>
-        <p>{trip.start_date} a {trip.end_date}</p>
-        <p>Miembros: {trip.members.length}</p>
+    <div className="min-h-screen bg-gray-50">
+      <TripHeader trip={trip} onNavigate={onNavigate} message={message} />
+      
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Analytics Section */}
+        <AnalyticsCards analytics={analytics} trip={trip} />
+
+        {/* Days Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Días del Viaje</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trip.days.map(day => (
+              <DayCard 
+                key={day.id} 
+                day={day} 
+                onDayClick={handleDayClick}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Photos Section */}
+        <PhotosGrid 
+          photos={photos}
+          onUpload={uploadPhoto}
+          onDelete={deletePhoto}
+          uploadLoading={uploadLoading}
+        />
       </div>
 
-      {message && <div style={{ 
-        color: message.includes('Error') ? 'red' : 'green', 
-        marginBottom: '15px',
-        padding: '10px',
-        border: `1px solid ${message.includes('Error') ? 'red' : 'green'}`
-      }}>
-        {message}
-      </div>}
-
-      {/* Tabs */}
-      <div style={{ marginBottom: '20px' }}>
-        {['schedule', 'expenses', 'photos', 'journal', 'analytics'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '10px 15px',
-              marginRight: '10px',
-              backgroundColor: activeTab === tab ? '#ddd' : ''
-            }}
-          >
-            {tab === 'schedule' && 'Cronograma'}
-            {tab === 'expenses' && 'Gastos'}
-            {tab === 'photos' && 'Fotos'}
-            {tab === 'journal' && 'Diario'}
-            {tab === 'analytics' && 'Analytics'}
-          </button>
-        ))}
-      </div>
-
-      {/* Schedule Tab */}
-      {activeTab === 'schedule' && (
-        <div>
-          <h2>Cronograma</h2>
-          {trip.days.map(day => (
-            <div key={day.id} style={{ border: '1px solid #ccc', padding: '15px', margin: '10px 0' }}>
-              <h3>{new Date(day.date).toLocaleDateString()}</h3>
-              {day.notes && <p>{day.notes}</p>}
-              <div>
-                <h4>Actividades ({day.activities.length})</h4>
-                {day.activities.map(activity => (
-                  <div key={activity.id} style={{ marginLeft: '20px', padding: '10px', border: '1px solid #eee' }}>
-                    <h5>{activity.title}</h5>
-                    {activity.description && <p>{activity.description}</p>}
-                    {activity.location && <p>📍 {activity.location}</p>}
-                    {activity.start_time && <p>🕐 {activity.start_time}</p>}
-                    {activity.estimated_cost && <p>💰 {activity.estimated_cost}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Expenses Tab */}
-      {activeTab === 'expenses' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2>Gastos ({expenses.length})</h2>
-            <button onClick={() => setShowExpenseForm(true)}>Agregar Gasto</button>
-          </div>
-
-          {showExpenseForm && (
-            <form onSubmit={createExpense} style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '20px' }}>
-              <h3>Nuevo Gasto</h3>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Monto"
-                value={expenseForm.amount}
-                onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                required
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              />
-              <input
-                type="text"
-                placeholder="Descripción"
-                value={expenseForm.description}
-                onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                required
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              />
-              <input
-                type="date"
-                value={expenseForm.date}
-                onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                required
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              />
-              <select
-                value={expenseForm.category}
-                onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              >
-                <option value="transporte">Transporte</option>
-                <option value="alojamiento">Alojamiento</option>
-                <option value="comida">Comida</option>
-                <option value="actividades">Actividades</option>
-                <option value="compras">Compras</option>
-                <option value="otros">Otros</option>
-              </select>
-              <div>
-                <button type="submit">Guardar</button>
-                <button type="button" onClick={() => setShowExpenseForm(false)} style={{ marginLeft: '10px' }}>
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          )}
-
-          <div>
-            {expenses.map(expense => (
-              <div key={expense.id} style={{ border: '1px solid #ccc', padding: '15px', margin: '10px 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div>
-                    <h4>{expense.description}</h4>
-                    <p>{expense.currency} {expense.amount} - {expense.category}</p>
-                    <p>{expense.date}</p>
-                  </div>
-                  <button 
-                    onClick={() => deleteExpense(expense.id)}
-                    style={{ backgroundColor: 'red', color: 'white', padding: '5px' }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Photos Tab */}
-      {activeTab === 'photos' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2>Fotos ({photos.length})</h2>
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                disabled={uploadLoading}
-                onChange={(e) => {
-                  const file = e.target.files[0]
-                  if (file) {
-                    console.log('[TRIP_DETAILS] File selected:', {
-                      name: file.name,
-                      size: file.size,
-                      type: file.type
-                    })
-                    uploadPhoto(file)
-                  }
-                }}
-                style={{ marginRight: '10px' }}
-              />
-              {uploadLoading && <span>Subiendo...</span>}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
-            {photos.map(photo => (
-              <div key={photo.id} style={{ border: '1px solid #ccc' }}>
-                <img 
-                  src={photo.file_url} 
-                  alt="Foto del viaje"
-                  style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                />
-                <div style={{ padding: '10px' }}>
-                  {photo.location && <p>📍 {photo.location}</p>}
-                  {photo.taken_at && <p>{new Date(photo.taken_at).toLocaleDateString()}</p>}
-                  <button 
-                    onClick={() => deletePhoto(photo.id)}
-                    style={{ 
-                      backgroundColor: 'red', 
-                      color: 'white', 
-                      padding: '5px', 
-                      border: 'none',
-                      cursor: 'pointer',
-                      marginTop: '5px'
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Journal Tab */}
-      {activeTab === 'journal' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2>Diario ({journalEntries.length})</h2>
-            <button onClick={() => setShowJournalForm(true)}>Nueva Entrada</button>
-          </div>
-
-          {showJournalForm && (
-            <form onSubmit={createJournalEntry} style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '20px' }}>
-              <h3>Nueva Entrada</h3>
-              <select
-                value={journalForm.day_id}
-                onChange={(e) => setJournalForm({ ...journalForm, day_id: e.target.value })}
-                required
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              >
-                {trip.days.map(day => (
-                  <option key={day.id} value={day.id}>
-                    {new Date(day.date).toLocaleDateString()}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                placeholder="Contenido de la entrada..."
-                value={journalForm.content}
-                onChange={(e) => setJournalForm({ ...journalForm, content: e.target.value })}
-                required
-                rows={6}
-                style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-              />
-              <div>
-                <button type="submit">Guardar</button>
-                <button type="button" onClick={() => setShowJournalForm(false)} style={{ marginLeft: '10px' }}>
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          )}
-
-          <div>
-            {journalEntries.map(entry => (
-              <div key={entry.id} style={{ border: '1px solid #ccc', padding: '15px', margin: '10px 0' }}>
-                <h4>{new Date(entry.created_at).toLocaleDateString()}</h4>
-                <p>{entry.content}</p>
-                {entry.recommendations.length > 0 && (
-                  <div>
-                    <h5>Recomendaciones:</h5>
-                    {entry.recommendations.map((rec, index) => (
-                      <p key={index}>{rec.type}: {rec.note}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Analytics Tab */}
-      {activeTab === 'analytics' && analytics && (
-        <div>
-          <h2>Analytics del Viaje</h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-            <div style={{ border: '1px solid #ccc', padding: '15px' }}>
-              <h3>Resumen del Viaje</h3>
-              <p>Total días: {analytics.trip_summary.total_days}</p>
-              <p>Días con actividades: {analytics.trip_summary.days_with_activities}</p>
-              <p>Total actividades: {analytics.trip_summary.total_activities}</p>
-              <p>Total miembros: {analytics.trip_summary.total_members}</p>
-            </div>
-
-            <div style={{ border: '1px solid #ccc', padding: '15px' }}>
-              <h3>Resumen de Gastos</h3>
-              <p>Total gastado: {trip.base_currency} {analytics.expense_summary.total_expenses}</p>
-              <p>Número de gastos: {analytics.expense_summary.total_expense_records}</p>
-              <p>Presupuesto estimado: {trip.base_currency} {analytics.expense_summary.budget_vs_actual.estimated_budget}</p>
-              <p>Varianza: {trip.base_currency} {analytics.expense_summary.budget_vs_actual.variance}</p>
-            </div>
-
-            <div style={{ border: '1px solid #ccc', padding: '15px' }}>
-              <h3>Contenido</h3>
-              <p>Total fotos: {analytics.content_summary.total_photos}</p>
-              <p>Entradas de diario: {analytics.content_summary.total_journal_entries}</p>
-            </div>
-          </div>
-
-          <div style={{ marginTop: '20px' }}>
-            <h3>Gastos por Categoría</h3>
-            {Object.entries(analytics.expense_summary.expenses_by_category).map(([category, amount]) => (
-              <p key={category}>{category}: {trip.base_currency} {amount}</p>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Day Detail Modal */}
+      <DayDetailModal
+        day={selectedDay}
+        isOpen={showDayModal}
+        onClose={() => setShowDayModal(false)}
+        onCreateExpense={createExpense}
+        onCreateJournal={createJournalEntry}
+        expenseForm={expenseForm}
+        setExpenseForm={setExpenseForm}
+        journalForm={journalForm}
+        setJournalForm={setJournalForm}
+        dayExpenses={selectedDay ? getDayExpenses(selectedDay.id) : []}
+        dayJournalEntries={selectedDay ? getDayJournalEntries(selectedDay.id) : []}
+        onDeleteExpense={deleteExpense}
+      />
     </div>
   )
 }

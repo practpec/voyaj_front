@@ -13,7 +13,8 @@ import VerifyEmail from './pages/VerifyEmail.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Profile from './pages/Profile.jsx'
 import TripDetails from './pages/TripDetails.jsx'
-import Subscription from './pages/Subscription.jsx'
+import Trips from './pages/Trips.jsx'
+import Friends from './pages/Friends.jsx'
 
 // Componente de carga
 const LoadingScreen = () => (
@@ -158,9 +159,18 @@ function App() {
           />
         )
       
-      case ROUTES.SUBSCRIPTION:
+      case ROUTES.TRIPS:
         return requireAuth(
-          <Subscription 
+          <Trips 
+            user={user}
+            onNavigate={navigate} 
+            onLogout={handleLogout}
+          />
+        )
+
+        case ROUTES.FRIENDS:
+        return requireAuth(
+          <Friends 
             user={user}
             onNavigate={navigate} 
             onLogout={handleLogout}

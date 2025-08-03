@@ -90,7 +90,7 @@ function CreateTripModal({ onClose, onTripCreated }) {
       }
       
       // Llamada real al API
-      const response = await fetch('http://localhost:8000/trips', {
+      const response = await fetch('https://voyaj-api.onrender.com/trips', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -16,12 +16,13 @@ const Navbar = ({ user, subscription, onNavigate, onLogout, onMenuClick }) => {
   }, [])
 
   const getPlanText = () => {
-    if (!subscription) return 'Cargando...'
+    // Si no hay subscription definida, no mostrar nada
+    if (!subscription) return ''
     return subscription.is_pro ? 'Plan PRO' : 'Plan FREE'
   }
 
   const getPlanColor = () => {
-    if (!subscription) return 'text-gray-500'
+    if (!subscription) return 'text-gray-400'
     return subscription.is_pro ? 'text-primary' : 'text-gray-500'
   }
 
@@ -82,14 +83,17 @@ const Navbar = ({ user, subscription, onNavigate, onLogout, onMenuClick }) => {
                 <p className="text-sm font-medium text-gray-700">
                   {user?.name || "Usuario"}
                 </p>
-                <p className={`text-xs ${getPlanColor()}`}>
-                  {getPlanText()}
-                </p>
+                {/* Solo mostrar plan si hay subscription cargada */}
+                {subscription && (
+                  <p className={`text-xs ${getPlanColor()}`}>
+                    {getPlanText()}
+                  </p>
+                )}
               </div>
               
               {/* Avatar */}
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-medium text-sm">
-                {(user?.name || "U").charAt(0).toUpperCase()}
+                {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
               </div>
               
               {/* Chevron */}

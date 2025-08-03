@@ -59,8 +59,9 @@ function App() {
         
         if (token && savedUser) {
           setUser(savedUser)
-          // Si está en página pública y tiene sesión, ir al dashboard
-          if (isPublicRoute(currentPage)) {
+          // CORREGIDO: Solo redirigir al dashboard si está en página pública 
+          // PERO NO si está en verify-email (necesita verificar primero)
+          if (isPublicRoute(currentPage) && currentPage !== ROUTES.VERIFY_EMAIL) {
             navigate(ROUTES.DASHBOARD)
           }
         }
@@ -72,7 +73,7 @@ function App() {
     }
 
     initializeUser()
-  }, [currentPage, isPublicRoute, navigate, ROUTES.DASHBOARD])
+  }, [currentPage, isPublicRoute, navigate, ROUTES.DASHBOARD, ROUTES.VERIFY_EMAIL])
 
   // Función para manejar login exitoso
   const handleLogin = (userData) => {
@@ -117,16 +118,19 @@ function App() {
         return <Login onNavigate={navigate} setUser={handleLogin} />
       
       case ROUTES.REGISTER:
-        if (user) {
+        // CORREGIDO: Solo redirigir si está logueado Y ya verificó email
+        // Si tiene user pero email no verificado, permitir acceso a register para que pueda ir a verify
+        if (user && user.email_verified) {
           navigate(ROUTES.DASHBOARD)
           return <LoadingScreen />
         }
-        return <Register onNavigate={navigate} setUser={handleLogin} />
+        return <Register onNavigate={navigate} setUser={setUser} />
       
       case ROUTES.RESET_PASSWORD:
         return <ForgotPassword onNavigate={navigate} />
       
       case ROUTES.VERIFY_EMAIL:
+        // CORREGIDO: Permitir acceso a verify-email incluso si hay user
         return <VerifyEmail onNavigate={navigate} user={user} />
 
       // Páginas autenticadas

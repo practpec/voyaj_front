@@ -3,14 +3,18 @@ import { tripsService } from '../services/api/tripsService.js'
 import { expensesService } from '../services/api/expensesService.js'
 import { photosService } from '../services/api/photosService.js'
 import { journalService } from '../services/api/journalService.js'
+import { subscriptionsService } from '../services/api/subscriptionsService.js'
+import Navbar from '../components/Navbar.jsx'
+import Sidebar from '../components/Sidebar.jsx'
 import TripHeader from '../components/TripHeader'
 import AnalyticsCards from '../components/AnalyticsCards'
 import DayCard from '../components/DayCard'
 import PhotosGrid from '../components/PhotosGrid'
 import DayDetailModal from '../components/DayDetailModal'
 
-function TripDetails({ tripId, onNavigate }) {
+function TripDetails({ tripId, user, onNavigate, onLogout }) {
   const [trip, setTrip] = useState(null)
+  const [subscription, setSubscription] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [photos, setPhotos] = useState([])
   const [journalEntries, setJournalEntries] = useState([])
@@ -18,6 +22,7 @@ function TripDetails({ tripId, onNavigate }) {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [uploadLoading, setUploadLoading] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Modal state
   const [selectedDay, setSelectedDay] = useState(null)
@@ -40,6 +45,7 @@ function TripDetails({ tripId, onNavigate }) {
 
   useEffect(() => {
     loadTripData()
+    loadSubscription()
   }, [tripId])
 
   useEffect(() => {
@@ -48,6 +54,15 @@ function TripDetails({ tripId, onNavigate }) {
     loadPhotos()
     loadJournalEntries()
   }, [tripId])
+
+  const loadSubscription = async () => {
+    try {
+      const subData = await subscriptionsService.getSubscriptionStatus()
+      setSubscription(subData)
+    } catch (error) {
+      console.error('[TRIP_DETAILS] Subscription load failed:', error)
+    }
+  }
 
   const loadTripData = async () => {
     try {
@@ -197,10 +212,19 @@ function TripDetails({ tripId, onNavigate }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar user={user} subscription={subscription} onNavigate={onNavigate} onLogout={onLogout} />
+        <Sidebar currentRoute="trips" onNavigate={onNavigate} />
+        
+        <div className="lg:ml-20 pt-20">
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="text-gray-600">Cargando...</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -208,15 +232,24 @@ function TripDetails({ tripId, onNavigate }) {
 
   if (!trip) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Viaje no encontrado</p>
-          <button 
-            onClick={() => onNavigate('dashboard')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Volver al Dashboard
-          </button>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar user={user} subscription={subscription} onNavigate={onNavigate} onLogout={onLogout} />
+        <Sidebar currentRoute="trips" onNavigate={onNavigate} />
+        
+        <div className="lg:ml-20 pt-20">
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="text-center space-y-6">
+              <div className="text-8xl">🗺️</div>
+              <h1 className="text-3xl font-bold text-gray-800">Viaje no encontrado</h1>
+              <p className="text-gray-600">El viaje que buscas no existe o no tienes acceso a él.</p>
+              <button 
+                onClick={() => onNavigate('trips')}
+                className="bg-primary text-white font-semibold py-3 px-8 rounded-full hover:bg-primary-hover hover:-translate-y-0.5 transform transition-all duration-300 shadow-card hover:shadow-elevated"
+              >
+                Volver a Mis Viajes
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -224,50 +257,67 @@ function TripDetails({ tripId, onNavigate }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TripHeader trip={trip} onNavigate={onNavigate} message={message} />
+      <Navbar 
+        user={user} 
+        subscription={subscription} 
+        onNavigate={onNavigate} 
+        onLogout={onLogout}
+        onMenuClick={() => setIsSidebarOpen(true)}
+      />
       
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Analytics Section */}
-        <AnalyticsCards analytics={analytics} trip={trip} />
+      <Sidebar
+        currentRoute="trips"
+        onNavigate={onNavigate}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+      
+      <div className="lg:ml-20 pt-20">
+        <TripHeader trip={trip} onNavigate={onNavigate} message={message} />
+        
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Analytics Section */}
+          <AnalyticsCards analytics={analytics} trip={trip} />
 
-        {/* Days Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Días del Viaje</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trip.days.map(day => (
-              <DayCard 
-                key={day.id} 
-                day={day} 
-                onDayClick={handleDayClick}
-              />
-            ))}
+          {/* Days Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Días del Viaje</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {trip.days.map(day => (
+                <DayCard 
+                  key={day.id} 
+                  day={day} 
+                  onDayClick={handleDayClick}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Photos Section */}
+          <PhotosGrid 
+            photos={photos}
+            onUpload={uploadPhoto}
+            onDelete={deletePhoto}
+            uploadLoading={uploadLoading}
+          />
         </div>
 
-        {/* Photos Section */}
-        <PhotosGrid 
-          photos={photos}
-          onUpload={uploadPhoto}
-          onDelete={deletePhoto}
-          uploadLoading={uploadLoading}
+        {/* Day Detail Modal */}
+        <DayDetailModal
+          day={selectedDay}
+          isOpen={showDayModal}
+          onClose={() => setShowDayModal(false)}
+          onCreateExpense={createExpense}
+          onCreateJournal={createJournalEntry}
+          expenseForm={expenseForm}
+          setExpenseForm={setExpenseForm}
+          journalForm={journalForm}
+          setJournalForm={setJournalForm}
+          dayExpenses={selectedDay ? getDayExpenses(selectedDay.id) : []}
+          dayJournalEntries={selectedDay ? getDayJournalEntries(selectedDay.id) : []}
+          onDeleteExpense={deleteExpense}
         />
       </div>
-
-      {/* Day Detail Modal */}
-      <DayDetailModal
-        day={selectedDay}
-        isOpen={showDayModal}
-        onClose={() => setShowDayModal(false)}
-        onCreateExpense={createExpense}
-        onCreateJournal={createJournalEntry}
-        expenseForm={expenseForm}
-        setExpenseForm={setExpenseForm}
-        journalForm={journalForm}
-        setJournalForm={setJournalForm}
-        dayExpenses={selectedDay ? getDayExpenses(selectedDay.id) : []}
-        dayJournalEntries={selectedDay ? getDayJournalEntries(selectedDay.id) : []}
-        onDeleteExpense={deleteExpense}
-      />
     </div>
   )
 }

@@ -344,7 +344,17 @@ const Profile = ({ user, subscription, onNavigate, onLogout, setUser }) => {
                           </div>
                           
                           <button
-                            onClick={() => onNavigate('subscription')}
+                            onClick={async () => {
+                              try {
+                                console.log('[PROFILE] Creating payment...')
+                                const response = await subscriptionsService.createPayment('pro')
+                                console.log('[PROFILE] Payment response:', response)
+                                window.open(response.init_point, '_blank')
+                              } catch (error) {
+                                console.error('[PROFILE] Payment creation failed:', error)
+                                alert('Error al crear el pago: ' + error.message)
+                              }
+                            }}
                             className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary-dark transition-colors"
                           >
                             Actualizar a PRO

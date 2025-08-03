@@ -1,20 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { storage } from './utils/storage.js'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Profile from './pages/Profile.jsx'
+import TripDetails from './pages/TripDetails.jsx'
+import Subscription from './pages/Subscription.jsx'
 
 function App() {
   const [page, setPage] = useState('login')
+  const [user, setUser] = useState(null)
+  const [tripId, setTripId] = useState(null)
+
+  useEffect(() => {
+    const token = storage.getAuthToken()
+    const savedUser = storage.getUser()
+    if (token && savedUser) {
+      setUser(savedUser)
+      setPage('dashboard')
+    }
+  }, [])
+
+  const navigate = (newPage, data = null) => {
+    setPage(newPage)
+    if (data?.tripId) setTripId(data.tripId)
+  }
+
+  const logout = () => {
+    storage.removeAuthTokens()
+    storage.removeUser()
+    setUser(null)
+    setPage('login')
+  }
+
+  if (!user) {
+    return (
+      <div>
+        {page === 'login' && <Login onNavigate={navigate} setUser={setUser} />}
+        {page === 'register' && <Register onNavigate={navigate} setUser={setUser} />}
+        {page === 'verify-email' && <VerifyEmail onNavigate={navigate} />}
+        {page === 'reset-password' && <ResetPassword onNavigate={navigate} />}
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 to-indigo-300 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-sm w-full text-center">
-        <h1 className="text-2xl font-bold mb-4 text-gray-800">Prueba de Layout</h1>
-        <button
-          onClick={() => setPage(page === 'login' ? 'dashboard' : 'login')}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-        >
-          {page === 'login' ? 'Ir a Dashboard' : 'Volver al Login'}
-        </button>
-        <p className="mt-4 text-gray-600">Página actual: {page}</p>
-      </div>
+    <div>
+      <nav style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>
+        <button onClick={() => navigate('dashboard')}>Dashboard</button>
+        <button onClick={() => navigate('profile')}>Perfil</button>
+        <button onClick={() => navigate('subscription')}>Suscripción</button>
+        <button onClick={logout}>Salir</button>
+        <span style={{ marginLeft: '20px' }}>Hola, {user.name}</span>
+      </nav>
+
+      {page === 'dashboard' && <Dashboard onNavigate={navigate} />}
+      {page === 'profile' && <Profile user={user} setUser={setUser} />}
+      {page === 'subscription' && <Subscription />}
+      {page === 'trip-details' && tripId && <TripDetails tripId={tripId} onNavigate={navigate} />}
     </div>
   )
 }

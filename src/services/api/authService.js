@@ -41,11 +41,25 @@ export const authService = {
     }),
 
   uploadProfilePhoto: (file) => {
+    console.log('[AUTH_SERVICE] Uploading photo:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    })
+    
     const formData = new FormData()
     formData.append('file', file)
+    
+    // Debug: Verificar token antes del upload
+    const token = localStorage.getItem('access_token')
+    console.log('[AUTH_SERVICE] Token for upload:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      tokenStart: token?.substring(0, 20)
+    })
+    
     return makeRequest('/auth/upload-profile-photo', {
       method: 'POST',
-      headers: {},
       body: formData
     })
   }

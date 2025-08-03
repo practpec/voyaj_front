@@ -2,7 +2,7 @@ import { makeRequest } from './config.js'
 
 export const friendshipsService = {
   sendFriendRequest: (userData) => 
-    makeRequest('/friendships/send-request', {
+    makeRequest('/friendships/requests', {
       method: 'POST',
       body: JSON.stringify(userData)
     }),
@@ -11,16 +11,16 @@ export const friendshipsService = {
     makeRequest('/friendships/requests'),
 
   respondToRequest: (requestId, response) => 
-    makeRequest(`/friendships/respond/${requestId}`, {
+    makeRequest(`/friendships/requests/${requestId}/respond`, {
       method: 'POST',
       body: JSON.stringify(response)
     }),
 
   getFriends: () => 
-    makeRequest('/friendships/friends'),
+    makeRequest('/friendships/'),
 
   removeFriend: (friendId) => 
-    makeRequest(`/friendships/remove/${friendId}`, {
+    makeRequest(`/friendships/${friendId}`, {
       method: 'DELETE'
     })
 }

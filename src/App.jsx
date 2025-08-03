@@ -1,34 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react'
+import { storage } from './utils/storage.js'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Profile from './pages/Profile.jsx'
+import TripDetails from './pages/TripDetails.jsx'
+import Subscription from './pages/Subscription.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [page, setPage] = useState('login')
+  const [user, setUser] = useState(null)
+  const [tripId, setTripId] = useState(null)
+
+  useEffect(() => {
+    const token = storage.getAuthToken()
+    const savedUser = storage.getUser()
+    if (token && savedUser) {
+      setUser(savedUser)
+      setPage('dashboard')
+    }
+  }, [])
+
+  const navigate = (newPage, data = null) => {
+    setPage(newPage)
+    if (data?.tripId) setTripId(data.tripId)
+  }
+
+  const logout = () => {
+    storage.removeAuthTokens()
+    storage.removeUser()
+    setUser(null)
+    setPage('login')
+  }
+
+  if (!user) {
+    return (
+      <div>
+        {page === 'login' && <Login onNavigate={navigate} setUser={setUser} />}
+        {page === 'register' && <Register onNavigate={navigate} setUser={setUser} />}
+        {page === 'verify-email' && <VerifyEmail onNavigate={navigate} />}
+        {page === 'reset-password' && <ResetPassword onNavigate={navigate} />}
+      </div>
+    )
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div>
+      <nav style={{ padding: '10px', borderBottom: '1px solid #ccc' }}>
+        <button onClick={() => navigate('dashboard')}>Dashboard</button>
+        <button onClick={() => navigate('profile')}>Perfil</button>
+        <button onClick={() => navigate('subscription')}>Suscripción</button>
+        <button onClick={logout}>Salir</button>
+        <span style={{ marginLeft: '20px' }}>Hola, {user.name}</span>
+      </nav>
+
+      {page === 'dashboard' && <Dashboard onNavigate={navigate} />}
+      {page === 'profile' && <Profile user={user} setUser={setUser} />}
+      {page === 'subscription' && <Subscription />}
+      {page === 'trip-details' && tripId && <TripDetails tripId={tripId} onNavigate={navigate} />}
+    </div>
   )
 }
 

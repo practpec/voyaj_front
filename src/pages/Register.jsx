@@ -29,9 +29,16 @@ function Register({ onNavigate, setUser }) {
 
     try {
       const response = await authService.register(form)
+      
+      // Guardar tokens y usuario
       storage.setAuthTokens(response)
       storage.setUser(response.user)
       setUser(response.user)
+      
+      // Guardar email para verificación
+      localStorage.setItem('pendingVerificationEmail', form.email)
+      
+      // IMPORTANTE: Redirigir a verificación de email, NO al dashboard
       onNavigate('verify-email')
     } catch (error) {
       setErrors({ general: error.toString() })

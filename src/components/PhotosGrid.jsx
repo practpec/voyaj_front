@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
-function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
+function PhotosGrid({ photos, onUpload, onDelete, uploadLoading, journalEntries = [] }) {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [location, setLocation] = useState('')
+  const [selectedJournalEntry, setSelectedJournalEntry] = useState('')
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
@@ -11,10 +12,11 @@ function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
     }
   }
 
-  const handleUpload = (file, locationValue) => {
-    onUpload(file, locationValue)
+  const handleUpload = (file, locationValue, journalEntryId) => {
+    onUpload(file, locationValue, journalEntryId)
     setShowUploadModal(false)
     setLocation('')
+    setSelectedJournalEntry('')
   }
 
   return (
@@ -35,12 +37,12 @@ function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
         </div>
       </div>
 
-      {/* Modal de ubicación */}
+      {/* Modal de ubicación y entrada de diario */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-background rounded-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-text-default">Agregar Ubicación</h3>
+              <h3 className="text-lg font-semibold text-text-default">Detalles de la Foto</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="text-text-muted hover:text-text-default"
@@ -62,6 +64,26 @@ function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
                   className="w-full px-3 py-2 border border-border-default rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
+
+              {journalEntries.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-text-default mb-2">
+                    Asociar a entrada de diario (opcional)
+                  </label>
+                  <select
+                    value={selectedJournalEntry}
+                    onChange={(e) => setSelectedJournalEntry(e.target.value)}
+                    className="w-full px-3 py-2 border border-border-default rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">No asociar a ninguna entrada</option>
+                    {journalEntries.map(entry => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.title || `Entrada del ${new Date(entry.created_at || '').toLocaleDateString()}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             
             <div className="flex gap-3 mt-6">
@@ -72,7 +94,11 @@ function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
                 Cancelar
               </button>
               <button
-                onClick={() => handleUpload(document.querySelector('input[type="file"]').files[0], location)}
+                onClick={() => handleUpload(
+                  document.querySelector('input[type="file"]').files[0], 
+                  location,
+                  selectedJournalEntry
+                )}
                 className="flex-1 px-4 py-2 bg-primary text-background rounded-lg hover:bg-primary-hover transition-colors font-semibold"
               >
                 Subir
@@ -90,12 +116,15 @@ function PhotosGrid({ photos, onUpload, onDelete, uploadLoading }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {photos.map(photo => (
-            <div key={photo.id} className="relative group bg-background-alt rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+          {photos.map((photo, index) => (
+            <div key={`${photo.id}-${index}`} className="relative group bg-background-alt rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
               <img 
-                src={photo.file_url} 
+                src={photo.file_url || 'https://via.placeholder.com/300x200?text=Sin+Imagen'} 
                 alt="Foto del viaje"
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/300x200?text=Error+Carga'
+                }}
               />
               
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-end">

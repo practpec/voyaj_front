@@ -85,7 +85,7 @@ function TripDetails({ tripId, user, onNavigate, onLogout }) {
     }
   }
 
-  const uploadPhoto = async (file, location = '') => {
+  const uploadPhoto = async (file, location = '', journalEntryId = '') => {
     if (!trip || !trip.days || trip.days.length === 0) {
       setMessage('Error: No hay días disponibles para asociar la foto')
       return
@@ -98,6 +98,11 @@ function TripDetails({ tripId, user, onNavigate, onLogout }) {
       formData.append('file', file)
       formData.append('location', location)
       formData.append('associated_day_id', trip.days[0].id)
+      
+      // Agregar entrada de diario si se seleccionó
+      if (journalEntryId) {
+        formData.append('associated_journal_entry_id', journalEntryId)
+      }
       
       await photosService.uploadPhoto(tripId, formData)
       await loadTripData()
@@ -318,6 +323,7 @@ function TripDetails({ tripId, user, onNavigate, onLogout }) {
               onUpload={uploadPhoto}
               onDelete={deletePhoto}
               uploadLoading={uploadLoading}
+              journalEntries={journalEntries}
             />
           </div>
 
